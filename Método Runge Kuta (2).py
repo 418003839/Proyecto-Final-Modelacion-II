@@ -6,22 +6,25 @@ Método Numérico de Runge Kuta para el problema
 @author: hiram
 """
 from matplotlib import pyplot as plt
+import math as mt
 
 alpha = 0.0166
 beta = 0.2875
-lamda = 0.3895
+lamda = 0.295
 mu = 0.0051
 gamma = 0.1908
 delta = 0.0008
 rho = 0.3666
 beta2 = 0.2625
 
+k=7
 No = 126
 Do = 7.8144 
 Co = 4.9856 
 So = 32.6 
-h = 0.01
+h = 0.001
 t = 0
+t0=0
 
 D = [Do]
 C = [Co]
@@ -29,24 +32,33 @@ S = [So]
 N = [No]
 DUC = [Do+Co]
 PRV = [(Do+Co)/No]
-N2 = [No]
+
+
+D1 = [Do]
+C1 = [Co]
+S1 = [So]
+N1 = [No]
+DUC1 = [Do+Co]
+PRV1 = [(Do+Co)/No]
+
 
 T = [0]
+T1=[0]
 
 def fD(t, Di, Ci, Si, Ni):
-    fD = ( 0.0166*0.2875 - 0.3895 - 0.0051)*Di+ ( 0.0166*0.2875 + 0.1908)*Ci + 0.2875*(Si*Di/Ni)
+    fD = ( alpha*rho - lamda - mu)*Di+ ( alpha*rho + gamma)*Ci + beta*(Si*Di/Ni)
     return fD
 
 def fC(t, Di, Ci):
-    fC = 0.3895*Di - (0.1908 + 0.0008 + 0.0051)*Ci
+    fC = lamda*Di - (gamma + delta+ mu)*Ci
     return fC
 
 def fS(t, Di, Ci, Si, Ni):
-    fS =  0.0166*Si +  0.0166*(1-0.3666)*Di +  0.0166*(1-0.3666)*Ci - 0.2875*(Si*Di/Ni)
+    fS =  alpha*Si +  alpha*(1-rho)*(Di + Ci) - beta*(Si*Di/Ni)
     return fS
 
 def fN(t,   Ni):
-    fN = (0.0166 - 0.0051)*Ni
+    fN = (alpha - mu)*Ni
     return fN
 
 def RK(t, Di, Ci, Si, Ni, h):
@@ -78,26 +90,38 @@ def RK(t, Di, Ci, Si, Ni, h):
     "------------------------------------------------------------------"
     return [FD, FC, FS, FN]
 
-while t < 5:
-    Kutta = RK(t, Do, Co, So, No, h)
+while t<k:
+    Kt = RK(t, Do, Co, So, No, h)
 
-    D.append(Kutta[0])
-    C.append(Kutta[1])
-    S.append(Kutta[2])
-    N.append(Kutta[3])
-    DUC.append(Kutta[0] + Kutta[1])
-    PRV.append((Kutta[0] + Kutta[1])/Kutta[3])
+    D.append(Kt[0])
+    C.append(Kt[1])
+    S.append(Kt[2])
+    N.append(Kt[3])
+    DUC.append(Kt[0] + Kt[1])
+    PRV.append((Kt[0] + Kt[1])/Kt[3])
     t += h
     T.append(t)
-    Do = Kutta[0]
-    Co = Kutta[1]
-    So = Kutta[2]
-    No = Kutta[3]
-
+    Do = Kt[0]
+    Co = Kt[1]
+    So = Kt[2]
+    No = Kt[3]
+    if t-t0>=1:
+        t0=mt.floor(t)
+        D1.append(Kt[0])
+        C1.append(Kt[1])
+        S1.append(Kt[2])
+        N1.append(Kt[3])
+        DUC1.append(Kt[0] + Kt[1])
+        PRV1.append((Kt[0] + Kt[1])/Kt[3])
+        T1.append(t0)
+    
+        
 
 fig = plt.figure()
 plt.plot(T, D, label= 'Diabéticos sin complicación')
 plt.plot(T, C, label= 'Diabéticos con complicación')
+plt.scatter(T1, D1, label = 'Diabéticos sin complicación anual')
+plt.scatter(T1, C1, label= 'Diabéticos con complicación anual')
 plt.xlabel("Tiempo (Años)")
 plt.ylabel("Población en millones de personas")
 plt.title('Comparativa de diabéticos con y sin complicación')
@@ -107,6 +131,7 @@ plt.show()
 
 fig2 = plt.figure()
 plt.plot(T, DUC, label= 'Diabéticos')
+plt.scatter(T1, DUC1, label= 'Diabéticos anuales')
 plt.xlabel("Tiempo (Años)")
 plt.ylabel("Población en millones de personas")
 plt.title('Estimación de la pobalción diabética')
@@ -116,6 +141,7 @@ plt.show()
 
 fig3 = plt.figure()
 plt.plot(T, S, label= 'Suceptibles a la enfermedad')
+plt.scatter(T1, S1, label= 'Suceptibles a la enfermedad anuales')
 plt.xlabel("Tiempo (Años)")
 plt.ylabel("Población en millones de personas")
 plt.title('Estimación de población suceptible')
@@ -125,6 +151,7 @@ plt.show()
 
 fig4 = plt.figure()
 plt.plot(T, N, label= 'Población')
+plt.scatter(T1, N1, label= 'Población anual')
 plt.xlabel("Tiempo (Años)")
 plt.ylabel("Población en millones de personas")
 plt.title('Estimación de la población')
@@ -134,6 +161,7 @@ plt.show()
 
 fig5 = plt.figure()
 plt.plot(T, PRV, label= 'Prevalencia de la enfermedad')
+plt.scatter(T1, PRV1, label= 'Prevalencia de la enfermedad anual')
 plt.xlabel("Tiempo (Años)")
 plt.ylabel("Población en millones de personas")
 plt.title("Prevalencia de la diabetes en México")
@@ -141,9 +169,21 @@ plt.grid()
 plt.legend()
 plt.show()
 
-print("Diabéticos sin complicaciones Inicial" , D[0], "Final" , D[-1], "Diferencia" , abs( D[-1]-D[0]))
-print("Diabéticos con complicaciones Inicial" , C[0], "Final" , C[-1], "Diferencia" , C[-1]-C[0])
-print("Suceptibles Inicial" , S[0], "Final" , S[-1], "Diferencia" , S[-1]-S[0])
-print("Población Inicial" , N[0], "Final" , N[-1], "Diferencia" , N[-1]-N[0])
-print("Diabéticos Inicial" , DUC[0], "Final" , DUC[-1], "Diferencia" , DUC[-1]-DUC[0])
-print("Prevalencia Inicial" , PRV[0], "Final" , PRV[-1], "Diferencia" , PRV[-1]-PRV[0])
+
+"""
+Esta pequeña parte del código genera una lista en excel donde da los datos anuales
+para poder tenerlos a la mano. El problema de la creación del archivo radica en la 
+ubicación de la creacion, así que si se desea el archivo, solo reemplazar 
+después del excel_writer poner "C:/Users/"nombre de usuario"/"el resto de la ubicación"
+
+Puedes tambien en la carpeta copiar su dirección y pegarla, sambiando la diagonal 
+inversa (\) por una diagonal normal(/)
+"""
+"""
+import pandas as pd
+
+array = [T1,D1,C1,S1,N1,DUC1,PRV1]
+
+df = pd.DataFrame(array).T
+df.to_excel(excel_writer = "C:/Users/hiram/Desktop/Expo Modelación/Martínez Aragón Hiram/Diab2.xlsx")
+"""
