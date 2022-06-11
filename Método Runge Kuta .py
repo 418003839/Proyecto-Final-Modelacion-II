@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec 26 18:45:29 2021
 Método Numérico de Runge Kuta para el problema
 
 @author: hiram
